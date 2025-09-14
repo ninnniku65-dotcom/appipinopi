@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>コンテンツ作成ツール</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="header"></header>
+
+  <main>
+    <section id="tool-section">
+      <h1>コンテンツ作成ツール</h1>
+      <p>ここで作成したいコンテンツの種類を選んで、情報を入力してください。</p>
+
+      <form id="blog-tool-form">
+        <div class="form-group">
+          <label for="mode-selector">作成する種類</label>
+          <select id="mode-selector">
+            <option value="blog">ブログ</option>
+            <option value="event">イベント</option>
+            <option value="badge">歴代バッチ</option>
+          </select>
+        </div>
+
+        <!-- Blog Form -->
+        <div id="blog-form-fields">
+          <div class="form-group">
+            <label for="blog-title">タイトル</label>
+            <input type="text" id="blog-title" placeholder="ブログのタイトル">
+          </div>
+          <div class="form-group">
+            <label for="blog-image">画像URL（任意）</label>
+            <input type="url" id="blog-image" placeholder="https://example.com/image.png">
+          </div>
+          <div class="form-group">
+            <label for="blog-content">文章</label>
+            <textarea id="blog-content" rows="10" placeholder="ブログの本文"></textarea>
+          </div>
+        </div>
+
+        <!-- Event Form -->
+        <div id="event-form-fields" style="display: none;">
+          <div class="form-group">
+            <label for="event-name">イベントの名前</label>
+            <input type="text" id="event-name" placeholder="例：新人ライバーの進撃">
+          </div>
+          <div class="form-group">
+            <label for="event-rank">順位</label>
+            <input type="number" id="event-rank" placeholder="例：1">
+          </div>
+          <div class="form-group">
+            <label for="event-reward">報酬（任意）</label>
+            <input type="text" id="event-reward" placeholder="例：オリジナル背景">
+          </div>
+          <div class="form-group">
+            <label for="event-comment">一言（任意）</label>
+            <textarea id="event-comment" rows="5" placeholder="応援ありがとうございました！"></textarea>
+          </div>
+        </div>
+
+        <!-- Badge Form -->
+        <div id="badge-form-fields" style="display: none;">
+          <div class="form-group">
+            <label for="badge-user">ユーザー名</label>
+            <input type="text" id="badge-user" placeholder="例：ぴのぴ">
+          </div>
+          <div class="form-group">
+            <label for="badge-level">獲得バッチ</label>
+            <select id="badge-level">
+              <option value="1">★1</option>
+              <option value="2">★2</option>
+              <option value="3">★3</option>
+              <option value="4">★4</option>
+              <option value="5">★5</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="badge-date">獲得日</label>
+            <input type="date" id="badge-date">
+          </div>
+          <div class="form-group">
+            <label for="badge-points">月間ポイント（任意）</label>
+            <input type="text" id="badge-points" placeholder="例：150,000pt">
+          </div>
+        </div>
+
+        <button type="submit" id="generate-json-btn">JSONを生成</button>
+      </form>
+
+      <div id="json-output-container" style="display:none;">
+        <h2>生成されたJSONコード</h2>
+        <p>下のコードをコピーして、対応するJSONファイルに貼り付けてください。</p>
+        <textarea id="json-output" readonly rows="15"></textarea>
+        <button id="copy-json-btn">コピーする</button>
+      </div>
+
+    </section>
+  </main>
+
+  <footer id="footer"></footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const modeSelector = document.getElementById('mode-selector');
+      const form = document.getElementById('blog-tool-form');
+      const outputContainer = document.getElementById('json-output-container');
+      const outputTextarea = document.getElementById('json-output');
+      const copyButton = document.getElementById('copy-json-btn');
+
+      const formFields = {
+        blog: document.getElementById('blog-form-fields'),
+        event: document.getElementById('event-form-fields'),
+        badge: document.getElementById('badge-form-fields')
+      };
+
+      // Mode switching
+      modeSelector.addEventListener('change', () => {
+        const selectedMode = modeSelector.value;
+        for (const mode in formFields) {
+          formFields[mode].style.display = mode === selectedMode ? 'block' : 'none';
+        }
+      });
+
+      // JSON Generation
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const selectedMode = modeSelector.value;
+        let data = { type: selectedMode };
+
+        if (selectedMode === 'blog') {
+          data.title = document.getElementById('blog-title').value;
+          data.image = document.getElementById('blog-image').value;
+          data.content = document.getElementById('blog-content').value.replace(/\n/g, '<br>');
+          data.date = new Date().toISOString().split('T')[0]; // Add current date
+        } else if (selectedMode === 'event') {
+          data.name = document.getElementById('event-name').value;
+          data.rank = document.getElementById('event-rank').value;
+          data.reward = document.getElementById('event-reward').value;
+          data.comment = document.getElementById('event-comment').value;
+        } else if (selectedMode === 'badge') {
+          data.user = document.getElementById('badge-user').value;
+          data.badge = document.getElementById('badge-level').value;
+          data.date = document.getElementById('badge-date').value;
+          data.points = document.getElementById('badge-points').value;
+        }
+
+        const jsonString = JSON.stringify(data, null, 2) + ',';
+        outputTextarea.value = jsonString;
+        outputContainer.style.display = 'block';
+      });
+
+      // Copy to clipboard
+      copyButton.addEventListener('click', () => {
+        outputTextarea.select();
+        document.execCommand('copy');
+        alert('JSONコードをコピーしました！');
+      });
+    });
+  </script>
+</body>
+</html>
